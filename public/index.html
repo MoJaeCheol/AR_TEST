@@ -2,45 +2,53 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>WebAR Touch to Start</title>
+    <title>WebAR Multi-Target Final</title>
     
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
     <style>
-      /* 🌟 [수정됨] 화면을 꽉 채우는 터치 유도 로딩 화면 */
+      /* 1. MindAR 기본 UI(로딩, 스캐닝 괄호) 강제 완벽 삭제 */
+      .mindar-ui-overlay, 
+      .mindar-ui-loading, 
+      .mindar-ui-scanning {
+        display: none !important;
+      }
+
+      /* 2. 화면을 꽉 채우는 터치 유도 로딩 화면 */
       #custom-loader {
         position: fixed;
         top: 0; left: 0;
-        width: 100vw; height: 100vh; /* 화면 전체 너비와 높이 */
+        width: 100vw; 
+        height: 100dvh; /* 모바일 주소창을 고려한 최신 꽉 찬 화면 단위 */
         
-        /* 1. 배경 이미지 설정 (본인의 이미지 파일명으로 변경하세요!) */
-        background-image: url('loading.png'); 
-        background-size: cover; /* 이미지가 찌그러지지 않고 화면을 꽉 채움 */
-        background-position: center; /* 이미지를 중앙에 배치 */
+        background-color: #000000; /* 이미지 로드 전 깜빡임 방지용 검은 배경 */
+        background-image: url('loading.png'); /* 🌟 본인의 로딩 이미지 파일명으로 변경! */
+        background-size: cover; 
+        background-position: center; 
         background-repeat: no-repeat;
         
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: flex-end; /* 안내 문구를 화면 아래쪽으로 배치 */
-        padding-bottom: 200px; /* 아래에서 80px 띄움 */
+        justify-content: flex-end; /* 컨텐츠를 아래쪽으로 정렬 */
         
         z-index: 9999;
-        cursor: pointer; /* 누를 수 있다는 느낌을 줌 */
-        transition: opacity 0.5s ease; /* 부드럽게 사라지는 효과 */
+        cursor: pointer; 
+        transition: opacity 0.5s ease; 
       }
 
-      /* 터치 유도 안내 문구 디자인 */
+      /* 3. 시작 안내 문구 디자인 및 위치 조정 */
       .start-text {
         color: #ffffff;
-        background-color: rgba(0, 0, 0, 0.6); /* 반투명 검은색 배경 */
+        background-color: rgba(0, 0, 0, 0.6); 
         padding: 12px 24px;
         border-radius: 30px;
         font-family: sans-serif;
         font-weight: bold;
         font-size: 16px;
-        animation: pulse 1.5s infinite; /* 깜빡이는 애니메이션 */
+        animation: pulse 1.5s infinite; 
+        margin-bottom: 13vh; /* 🌟 하단에서 20%만큼 위로 밀어 올림 (주소창 가림 방지) */
       }
 
       @keyframes pulse {
@@ -51,7 +59,7 @@
     </style>
 
     <script>
-      // 완벽하게 작동하는 크로마키 쉐이더 유지
+      // 4. 완벽하게 작동하는 크로마키 쉐이더
       AFRAME.registerShader('chromakey', {
         schema: {
           src: { type: 'map', is: 'uniform' },
@@ -85,35 +93,44 @@
 
       document.addEventListener("DOMContentLoaded", function() {
         const loader = document.getElementById('custom-loader');
-        const target = document.querySelector('[mindar-image-target]');
-        const video = document.querySelector('#myVideo');
+        
+        // 두 개의 마커와 비디오 가져오기
+        const target1 = document.querySelector('#target1');
+        const video1 = document.querySelector('#video1');
+        
+        const target2 = document.querySelector('#target2');
+        const video2 = document.querySelector('#video2');
 
-        // 🌟 [핵심] 화면을 터치하면 비디오 엔진을 깨우고 로딩 화면을 지웁니다
+        // 5. 터치 시 모든 비디오 권한 잠금 해제 및 로딩 화면 숨기기
         loader.addEventListener('click', function() {
           console.log("터치 인식! 비디오 엔진 잠금 해제");
           
-          // 비디오 강제 1회 재생 후 정지 (iOS/크롬 보안 뚫기)
-          video.play().then(() => {
-            video.pause();
-          }).catch(err => console.log("비디오 대기 중..."));
+          // iOS 뚫기: 등록된 모든 비디오를 한 번씩 play 후 pause
+          video1.play().then(() => video1.pause()).catch(e => console.log("video1 대기"));
+          video2.play().then(() => video2.pause()).catch(e => console.log("video2 대기"));
 
-          // 로딩 화면 부드럽게 숨기기
           loader.style.opacity = '0';
-          setTimeout(() => {
-            loader.style.display = 'none';
-          }, 500);
+          setTimeout(() => { loader.style.display = 'none'; }, 500);
         });
 
-        // 마커 인식 시 재생
-        target.addEventListener("targetFound", () => {
-          console.log("시나모롤 인식 성공! 재생");
-          video.play();
+        // --- 1번 마커 동작 ---
+        target1.addEventListener("targetFound", () => {
+          console.log("1번 마커 인식 성공!");
+          video1.play();
+        });
+        target1.addEventListener("targetLost", () => {
+          console.log("1번 마커 놓침!");
+          video1.pause();
         });
 
-        // 마커 놓침 시 일시정지
-        target.addEventListener("targetLost", () => {
-          console.log("인식 끊김");
-          video.pause();
+        // --- 2번 마커 동작 ---
+        target2.addEventListener("targetFound", () => {
+          console.log("2번 마커 인식 성공!");
+          video2.play();
+        });
+        target2.addEventListener("targetLost", () => {
+          console.log("2번 마커 놓침!");
+          video2.pause();
         });
       });
     </script>
@@ -133,17 +150,25 @@
       device-orientation-permission-ui="enabled: false">
       
       <a-assets>
-        <video id="myVideo" src="03_green.mp4" crossorigin="anonymous" preload="auto" loop muted playsinline webkit-playsinline></video>
+        <video id="video1" src="01_green.mp4" crossorigin="anonymous" preload="auto" loop muted playsinline webkit-playsinline></video>
+        <video id="video2" src="02_green.mp4" crossorigin="anonymous" preload="auto" loop muted playsinline webkit-playsinline></video>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <a-entity mindar-image-target="targetIndex: 0">
+      <a-entity id="target1" mindar-image-target="targetIndex: 0">
         <a-plane 
-          material="shader: chromakey; src: #myVideo; color: #00FF00; threshold: 0.2; transparent: true;" 
+          material="shader: chromakey; src: #video1; color: #00FF00; threshold: 0.2; transparent: true;" 
           width="1.5" height="1" 
-          position="0 0 0" 
-          rotation="0 0 0">
+          position="0 0 0" rotation="0 0 0">
+        </a-plane>
+      </a-entity>
+
+      <a-entity id="target2" mindar-image-target="targetIndex: 1">
+        <a-plane 
+          material="shader: chromakey; src: #video2; color: #00FF00; threshold: 0.2; transparent: true;" 
+          width="1.5" height="1" 
+          position="0 0 0" rotation="0 0 0">
         </a-plane>
       </a-entity>
       
