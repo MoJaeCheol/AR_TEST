@@ -2,15 +2,65 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>MindAR WebAR</title>
+    <title>My Custom WebAR</title>
     
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
+    <style>
+      /* 1. 커스텀 로더 스타일 */
+      #custom-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #ffffff; /* 👈 배경색 (원하는 색으로 변경 가능) */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999; /* 최상단에 위치 */
+        transition: opacity 0.5s ease; /* 부드럽게 사라지는 효과 */
+      }
+
+      /* 로딩 스피너 (점 애니메이션 대신 넣고 싶을 때 사용) */
+      .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border-left-color: #09d;
+        animation: spin 1s ease infinite;
+        margin-bottom: 15px;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+
     <script>
       document.addEventListener("DOMContentLoaded", function() {
+        const sceneEl = document.querySelector('a-scene');
+        const loader = document.querySelector('#custom-loader');
         const target = document.querySelector('[mindar-image-target]');
         const video = document.querySelector('#myVideo');
+
+        // [추가] AR 엔진이 완전히 로드되어 카메라가 켜지면 실행
+        sceneEl.addEventListener("arReady", (event) => {
+          console.log("MindAR 준비 완료 - 커스텀 로더 제거");
+          loader.style.opacity = "0"; // 투명하게 만듦
+          setTimeout(() => {
+            loader.style.display = "none"; // 0.5초 뒤 완전히 삭제
+          }, 500);
+        });
+
+        // [추가] 카메라 권한 거부 등 에러 발생 시 처리
+        sceneEl.addEventListener("arError", (event) => {
+          console.log("AR 시작 에러 발생");
+        });
 
         target.addEventListener("targetFound", event => {
           console.log("시나모롤 인식 성공!");
@@ -24,7 +74,13 @@
       });
     </script>
   </head>
+
   <body>
+    <div id="custom-loader">
+      <div class="spinner"></div>
+      <div style="font-family: sans-serif; color: #333;">AR 카메라 준비 중...</div>
+      </div>
+
     <a-scene mindar-image="imageTargetSrc: targets.mind; uiLoading: no; uiScanning: no;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
       
       <a-assets>
